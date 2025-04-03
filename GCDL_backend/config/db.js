@@ -11,5 +11,13 @@ const db = mysql.createPool({
   connectionLimit: 10,
   queueLimit: 0
 });
+db.getConnection()
+  .then(connection => {
+    console.log('Connected to database gcdl');
+    connection.release();
+  })
+  .catch(err => {
+    console.error('Database connection failed:', err);
+  });
 
 module.exports = db;
