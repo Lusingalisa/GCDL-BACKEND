@@ -4,6 +4,13 @@ const cors = require('cors');
 app.use(cors());
 const authRoutes= require('./routes/auth');
 require('dotenv').config();
+const procumentRoutes = require('./routes/procurements')
+const salesRoutes =require('./routes/sales')
+
+app.use('/api',procumentRoutes);
+app.use('/api',salesRoutes);
+
+
 
 app.use(express.json());
 
@@ -17,3 +24,5 @@ app.listen(PORT, () => {
 });
 
 app.use('/api', authRoutes);
+
+

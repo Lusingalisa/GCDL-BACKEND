@@ -1,7 +1,6 @@
-// routes/procurements.js
 const express = require('express');
 const router = express.Router();
-const { validateProcurementData } = require('../middleware/procurementValidation');
+const { validateProcurementData } = require('../middleware/procurementValidation'); // Fixed typo
 
 // In-memory storage (replace with database in production)
 let procurements = [];
@@ -22,36 +21,32 @@ router.post('/procurements', validateProcurementData, (req, res) => {
     } = req.body;
 
     try {
-        // Create procurement object with additional metadata
         const procurement = {
             id: generateUniqueId(),
             name: name.trim(),
-            type: type.toLowerCase(),
+            type,
             date,
             time,
-            tonnage: parseFloat(tonnage),
-            cost: parseFloat(cost),
+            tonnage,
+            cost,
             dealerName: dealerName.trim(),
             branch,
             contact: contact.trim(),
-            sellingPrice: parseFloat(sellingPrice),
+            sellingPrice,
             createdAt: new Date().toISOString(),
-            profitMargin: calculateProfitMargin(parseFloat(cost), parseFloat(sellingPrice))
+            profitMargin: calculateProfitMargin(cost, sellingPrice)
         };
 
         procurements.push(procurement);
 
-        res.status(201).json({ 
+        res.status(201).json({
             message: 'Procurement recorded successfully',
             procurementId: procurement.id,
             data: procurement
         });
-
     } catch (error) {
         console.error('Procurement error:', error);
-        res.status(500).json({ 
-            error: 'Internal server error' 
-        });
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
@@ -61,7 +56,7 @@ function generateUniqueId() {
 }
 
 function calculateProfitMargin(cost, sellingPrice) {
-    return ((sellingPrice - cost) / cost) * 100;
+    return Number(((sellingPrice - cost) / cost * 100).toFixed(2));
 }
 
 // Additional routes
