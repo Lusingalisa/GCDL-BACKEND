@@ -61,6 +61,7 @@ module.exports = {
       CREATE_USER: ['ceo'],
       VIEW_USERS: ['manager', 'ceo'],
       VIEW_STOCK: ['sales_agent', 'manager', 'ceo'],
+      DELETE_STOCK:['admin'],
       UPDATE_STOCK: ['manager', 'ceo'],
       CREATE_PROCUREMENT: ['manager'],
       VIEW_PROCUREMENT: ['manager', 'ceo']

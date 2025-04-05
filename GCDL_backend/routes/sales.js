@@ -60,7 +60,7 @@
 const express = require('express');
 const router = express.Router();
 const salesController = require('../controllers/salesController');
-const { authenticateToken } = require('../middleware/authJWT');
+const authenticateToken = require('../middleware/authJWT');
 const { hasPermission } = require('../middleware/roleCheck');
 
 // Apply middleware directly without any wrapping functions

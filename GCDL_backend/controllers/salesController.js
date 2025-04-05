@@ -105,3 +105,44 @@ exports.getAllSales = async (req, res) => {
       res.status(500).json({ error: error.message });
     }
   };
+
+// Add to salesController.js
+exports.updateSale = async (req, res) => {
+  const { sale_id } = req.params;
+  const updateData = req.body;
+  
+  try {
+    // Add your update logic here
+    const [result] = await db.query(
+      'UPDATE sales SET ? WHERE sale_id = ?',
+      [updateData, sale_id]
+    );
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Sale not found' });
+    }
+    
+    res.json({ message: 'Sale updated successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.deleteSale = async (req, res) => {
+  const { sale_id } = req.params;
+  
+  try {
+    const [result] = await db.query(
+      'DELETE FROM sales WHERE sale_id = ?',
+      [sale_id]
+    );
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Sale not found' });
+    }
+    
+    res.json({ message: 'Sale deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
