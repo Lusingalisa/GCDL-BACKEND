@@ -7,6 +7,13 @@ const stockRoutes = require('./routes/stock');
 const salesRoutes = require('./routes/sales');
 
 require('dotenv').config();
+const procumentRoutes = require('./routes/procurements')
+const salesRoutes =require('./routes/sales')
+
+app.use('/api',procumentRoutes);
+app.use('/api',salesRoutes);
+
+
 
 app.use(express.json());
 
@@ -23,12 +30,6 @@ app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
 
-process.on('uncaughtException', (err) => {
-    console.error('Uncaught Exception:', err);
-  });
-  
-  process.on('unhandledRejection', (err) => {
-    console.error('Unhandled Rejection:', err);
-  });
+app.use('/api', authRoutes);
 
 
