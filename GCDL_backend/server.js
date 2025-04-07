@@ -5,10 +5,11 @@ app.use(cors());
 const authRoutes= require('./routes/auth');
 const stockRoutes = require('./routes/stock');
 const salesRoutes = require('./routes/sales');
+const procumentRoutes = require('./routes/procurements');
 
 require('dotenv').config();
-const procumentRoutes = require('./routes/procurements')
-const salesRoutes =require('./routes/sales')
+
+
 
 app.use('/api',procumentRoutes);
 app.use('/api',salesRoutes);
