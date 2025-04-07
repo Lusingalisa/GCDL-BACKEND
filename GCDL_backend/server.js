@@ -16,7 +16,7 @@ app.use('/api',salesRoutes);
 
 
 app.use(express.json());
-
+app.use(express.urlencoded({ extended: true }));
 app.use('/api', authRoutes);
 app.use('/api/stock', stockRoutes);
 app.use('/api/sales', salesRoutes);

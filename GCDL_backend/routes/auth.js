@@ -6,6 +6,10 @@ const db = require('../config/db');
 
 // Register (optional for MVP, useful for testing)
 router.post('/register', async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).json({ error: "Request body is empty" });
+  }
+
     const { username, email, password, role, branch_id } = req.body;
     try {
       const hashedPassword = await bcrypt.hash(password, 10);
@@ -16,7 +20,7 @@ router.post('/register', async (req, res) => {
       res.status(201).json({ user_id: result.insertId });
     } catch (error) {
       res.status(500).json({ error: error.message });
-    }
+    } 
   });
 
 // Login
