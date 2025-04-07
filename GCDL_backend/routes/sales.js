@@ -82,5 +82,5 @@ router.get('/sales/:id', (req, res) => {
 function generateUniqueId() {
     return 'SALE_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 }
-=======
+
 module.exports = router;
