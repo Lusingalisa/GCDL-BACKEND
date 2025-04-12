@@ -3,9 +3,21 @@ const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../config/db');
+const authController = require('../controllers/authController');
+const {validateEmail} = require('../middleware/validators');
+
+// Middleware to validate email
+const validateEmailMiddleware = (req, res, next) => {
+  const { email } = req.body;
+  const validation = validateEmail(email);
+  if (!validation.valid) {
+    return res.status(400).json({ error: validation.message });
+  }
+  next();
+};
 
 // Register (optional for MVP, useful for testing)
-router.post('/register', async (req, res) => {
+router.post('/register', async (req, res, next) => {
   if (!req.body || Object.keys(req.body).length === 0) {
     return res.status(400).json({ error: "Request body is empty" });
   }
@@ -20,8 +32,9 @@ router.post('/register', async (req, res) => {
       res.status(201).json({ user_id: result.insertId });
     } catch (error) {
       res.status(500).json({ error: error.message });
-    } 
-  });
+    }
+    next();
+  }, validateEmailMiddleware,authController.register);
 
 // Login
 router.post('/login', async (req, res) => {
@@ -41,6 +54,6 @@ router.post('/login', async (req, res) => {
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
-  });
+  },validateEmailMiddleware,authController.login);
   
 module.exports = router;
