@@ -1,14 +1,13 @@
 const express = require('express');
 const app = express();
 const cors = require('cors');
-app.use(cors());
 const authRoutes= require('./routes/auth');
 const stockRoutes = require('./routes/stock');
 const salesRoutes = require('./routes/sales');
 const procumentRoutes = require('./routes/procurements')
 
-
 require('dotenv').config();
+app.use(cors());
 
 
 app.use('/api',procumentRoutes);
@@ -17,7 +16,7 @@ app.use('/api',salesRoutes);
 
 
 app.use(express.json());
-
+app.use(express.urlencoded({ extended: true }));
 app.use('/api', authRoutes);
 app.use('/api/stock', stockRoutes);
 app.use('/api/sales', salesRoutes);
