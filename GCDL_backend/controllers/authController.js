@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const db = require('../config/db');
 
 exports.register = async (req, res) => {
-  const { username, email, password, role, branch_id } = req.body;
+  const { username, email, password, branch_id } = req.body;
   
   try {
     // Check if user exists
@@ -11,6 +11,7 @@ exports.register = async (req, res) => {
     if (existing.length > 0) {
       return res.status(400).json({ error: 'User already exists' });
     }
+    const role = 'sales_agent';
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const [result] = await db.query(
@@ -20,7 +21,8 @@ exports.register = async (req, res) => {
     
     res.status(201).json({ 
       user_id: result.insertId,
-      message: 'User registered successfully' 
+      message: 'User registered successfully',
+      role:role
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

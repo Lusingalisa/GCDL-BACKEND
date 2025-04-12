@@ -74,3 +74,11 @@ INSERT INTO branches (branch_name) VALUES ('Maganjo'), ('Matugga');
 INSERT INTO produce (name, type) VALUES ('Beans', 'Red'), ('Maize', 'Yellow');
 INSERT INTO users (username, email, password, role, branch_id) 
 VALUES ('Charlie', 'charlie7@gmail.com.com', 'Charlie7@2003', 'ceo', NULL); -- CEO has no branch restriction
+
+ALTER TABLE users
+MODIFY COLUMN role ENUM('manager','sales_agent','ceo') NOT NULL DEFAULT 'sales_agent';
+desc users;
+
+ALTER TABLE users 
+ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
