@@ -1,13 +1,13 @@
 const express = require('express');
 const app = express();
 const cors = require('cors');
-app.use(cors());
 const authRoutes= require('./routes/auth');
 const stockRoutes = require('./routes/stock');
 const salesRoutes = require('./routes/sales');
-const procumentRoutes = require('./routes/procurements');
+const procumentRoutes = require('./routes/procurements')
 
 require('dotenv').config();
+app.use(cors());
 
 
 app.use('/api',procumentRoutes);
