@@ -4,7 +4,7 @@ const cors = require('cors');
 const authRoutes= require('./routes/auth');
 const stockRoutes = require('./routes/stock');
 const salesRoutes = require('./routes/sales');
-const procumentRoutes = require('./routes/procurements')
+const procumentRoutes = require('./routes/procurements');
 
 require('dotenv').config();
 
