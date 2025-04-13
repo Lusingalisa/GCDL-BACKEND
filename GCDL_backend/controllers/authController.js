@@ -1,18 +1,26 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../config/db');
+const {validateEmail} = require('../middleware/validators');
 
 exports.register = async (req, res) => {
-  const { username, email, password, role, branch_id } = req.body;
+  const { username, email, password, branch_id } = req.body;
+
+    // Validate email
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.valid) {
+      return res.status(400).json({ error: emailValidation.message });
+    }
   
   try {
     // Check if user exists
     const [existing] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
     if (existing.length > 0) {
-      return res.status(400).json({ error: 'User already exists' });
+      return res.status(400).json({ error: 'Email already in use' });
     }
-
+    const role = 'sales_agent';
     const hashedPassword = await bcrypt.hash(password, 10);
+    
     const [result] = await db.query(
       'INSERT INTO users (username, email, password, role, branch_id) VALUES (?, ?, ?, ?, ?)',
       [username, email, hashedPassword, role, branch_id]
@@ -20,7 +28,8 @@ exports.register = async (req, res) => {
     
     res.status(201).json({ 
       user_id: result.insertId,
-      message: 'User registered successfully' 
+      message: 'User registered successfully',
+      role:role
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -30,6 +39,12 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   const { email, password } = req.body;
   
+  // Validate email
+  const emailValidation = validateEmail(email);
+  if (!emailValidation.valid) {
+    return res.status(400).json({ error: emailValidation.message });
+  }
+
   try {
     const [rows] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
     const user = rows[0];
