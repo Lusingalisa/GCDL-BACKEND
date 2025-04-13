@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+
 const jwt = require('jsonwebtoken');
 const db = require('../config/db');
 const { validateProduce } = require('../middleware/produceValidation');
@@ -136,6 +137,7 @@ router.delete('/:id', authenticate, restrictTo('manager', 'ceo'), async (req, re
         console.error('Delete produce error:', error);
         res.status(500).json({ error: 'Failed to delete produce' });
     }
+
 });
 
 module.exports = router;

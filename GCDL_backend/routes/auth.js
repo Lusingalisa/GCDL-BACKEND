@@ -103,7 +103,9 @@ router.post('/register', validateRegister, async (req, res) => {
         }
         res.status(500).json({ error: 'Failed to register user' });
     }
-});
+
+  });
+
 
 // Login user
 router.post('/login', validateLogin, async (req, res) => {
@@ -138,7 +140,9 @@ router.post('/login', validateLogin, async (req, res) => {
         }
         res.status(500).json({ error: 'Failed to login' });
     }
-});
+
+  });
+  
 
 // Get all users (admin only)
 router.get('/users', authenticate, restrictTo('manager', 'ceo'), async (req, res) => {
@@ -156,5 +160,6 @@ router.get('/users', authenticate, restrictTo('manager', 'ceo'), async (req, res
         res.status(500).json({ error: 'Failed to retrieve users' });
     }
 });
+
 
 module.exports = router;

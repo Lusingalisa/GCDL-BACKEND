@@ -1,8 +1,23 @@
 const express = require('express');
 const cors = require('cors');
+
+const authRoutes= require('./routes/auth');
+const stockRoutes = require('./routes/stock');
+const salesRoutes = require('./routes/sales');
+const procumentRoutes = require('./routes/procurements');
+const userRoutes=require('./routes/user');
+const produceRoutes=require('./routes/produce');
+const UsersFRoutes=require('./routes/UsersF');
+
 require('dotenv').config();
 
-const app = express();
+app.use(cors({
+    origin: 'http://localhost:5173', // Your frontend URL
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true // If using cookies/sessions
+  }));
+
 
 // Middleware - Apply before routes
 app.use(cors()); // Enable CORS for all routes
@@ -17,14 +32,18 @@ const procurementRoutes = require('./routes/procurements');
 const creditSalesRoutes = require('./routes/credit-sales');
 const produceRoutes = require('./routes/produce');
 
-
-// Mount routes with clear prefixes
-app.use('/api/auth', authRoutes);
-app.use('/api/stock', stockRoutes);
-app.use('/api/sales', salesRoutes);
-app.use('/api/procurements', procurementRoutes);
-app.use('/api/credit-sales', creditSalesRoutes);
+app.use('/api',procumentRoutes);
+app.use('/api',salesRoutes);
+app.use('/api/auth', authRoutes );
+app.use('/api/users', userRoutes);
 app.use('/api/produce', produceRoutes);
+app.use('/api/users', UsersFRoutes);
+app.use('/api/stock', stockRoutes);
+
+
+app.use('/api/credit-sales', creditSalesRoutes);
+
+
 
 // Root route for testing
 app.get('/', (req, res) => {
