@@ -74,3 +74,10 @@ INSERT INTO branches (branch_name) VALUES ('Maganjo'), ('Matugga');
 INSERT INTO produce (name, type) VALUES ('Beans', 'Red'), ('Maize', 'Yellow');
 INSERT INTO users (username, email, password, role, branch_id) 
 VALUES ('Charlie', 'charlie7@gmail.com.com', 'Charlie7@2003', 'ceo', NULL); -- CEO has no branch restriction
+
+SHOW DATABASES;
+USE gcdl;
+SHOW TABLES;
+
+ALTER TABLE credit_sales ADD COLUMN sales_agent_id INT,
+    ADD FOREIGN KEY (sales_agent_id) REFERENCES users(user_id);
