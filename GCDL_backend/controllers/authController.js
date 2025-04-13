@@ -46,8 +46,10 @@ exports.login = async (req, res) => {
   }
 
   try {
+    console.log('Login attempt for:', email);
     const [rows] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
     const user = rows[0];
+    console.log('Found user:', rows[0]);
     
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ error: 'Invalid credentials' });

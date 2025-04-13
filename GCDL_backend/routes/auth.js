@@ -33,8 +33,7 @@ router.post('/register', async (req, res, next) => {
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
-    next();
-  }, validateEmailMiddleware,authController.register);
+  });
 
 // Login
 router.post('/login', async (req, res) => {
@@ -54,6 +53,6 @@ router.post('/login', async (req, res) => {
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
-  },validateEmailMiddleware,authController.login);
+  });
   
 module.exports = router;
