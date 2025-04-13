@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const app=express();
 
 const authRoutes= require('./routes/auth');
 const stockRoutes = require('./routes/stock');
@@ -8,6 +9,7 @@ const procumentRoutes = require('./routes/procurements');
 const userRoutes=require('./routes/user');
 const produceRoutes=require('./routes/produce');
 const UsersFRoutes=require('./routes/UsersF');
+const creditSalesRoutes = require('./routes/credit-sales');
 
 require('dotenv').config();
 
@@ -20,17 +22,11 @@ app.use(cors({
 
 
 // Middleware - Apply before routes
-app.use(cors()); // Enable CORS for all routes
+// app.use(cors()); // Enable CORS for all routes
 app.use(express.json()); // Parse JSON request bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies (optional)
 
-// Route imports
-const authRoutes = require('./routes/auth');
-const stockRoutes = require('./routes/stock');
-const salesRoutes = require('./routes/sales');
-const procurementRoutes = require('./routes/procurements');
-const creditSalesRoutes = require('./routes/credit-sales');
-const produceRoutes = require('./routes/produce');
+
 
 app.use('/api',procumentRoutes);
 app.use('/api',salesRoutes);
