@@ -16,6 +16,8 @@ const salesRoutes = require('./routes/sales');
 const procurementRoutes = require('./routes/procurements');
 const creditSalesRoutes = require('./routes/credit-sales');
 const produceRoutes = require('./routes/produce');
+const branchesRoutes = require('./routes/branches');
+
 
 
 // Mount routes with clear prefixes
@@ -25,6 +27,8 @@ app.use('/api/sales', salesRoutes);
 app.use('/api/procurements', procurementRoutes);
 app.use('/api/credit-sales', creditSalesRoutes);
 app.use('/api/produce', produceRoutes);
+app.use('/api/branches', branchesRoutes);
+
 
 // Root route for testing
 app.get('/', (req, res) => {
