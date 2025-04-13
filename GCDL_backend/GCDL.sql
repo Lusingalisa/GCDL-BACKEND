@@ -80,4 +80,4 @@ USE gcdl;
 SHOW TABLES;
 
 ALTER TABLE credit_sales ADD COLUMN sales_agent_id INT,
-    ADD FOREIGN KEY (sales_agent_id) REFERENCES users(user_id);
+ADD FOREIGN KEY (sales_agent_id) REFERENCES users(user_id);
