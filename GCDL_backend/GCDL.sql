@@ -74,12 +74,10 @@ INSERT INTO branches (branch_name) VALUES ('Maganjo'), ('Matugga');
 INSERT INTO produce (name, type) VALUES ('Beans', 'Red'), ('Maize', 'Yellow');
 INSERT INTO users (username, email, password, role, branch_id) 
 VALUES ('Charlie', 'charlie7@gmail.com.com', 'Charlie7@2003', 'ceo', NULL); -- CEO has no branch restriction
-SELECT * FROM users;
-UPDATE users SET email="charlie7@gmail.com" WHERE role='ceo';
-ALTER TABLE users
-MODIFY COLUMN role ENUM('manager','sales_agent','ceo') NOT NULL DEFAULT 'sales_agent';
-desc users;
 
-ALTER TABLE users 
-ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+SHOW DATABASES;
+USE gcdl;
+SHOW TABLES;
+
+ALTER TABLE credit_sales ADD COLUMN sales_agent_id INT,
+ADD FOREIGN KEY (sales_agent_id) REFERENCES users(user_id);
