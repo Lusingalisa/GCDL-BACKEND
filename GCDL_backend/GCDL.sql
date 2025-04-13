@@ -73,6 +73,7 @@ CREATE TABLE stock (
 INSERT INTO branches (branch_name) VALUES ('Maganjo'), ('Matugga');
 INSERT INTO produce (name, type) VALUES ('Beans', 'Red'), ('Maize', 'Yellow');
 INSERT INTO users (username, email, password, role, branch_id) 
+
 VALUES ('CharlesM', 'charlie8@gmail.com', 'Lusinga@2003', 'sales_agent', 2); -- CEO has no branch restriction
 SELECT * FROM sales;
 UPDATE users SET email="charlie7@gmail.com" WHERE role='ceo';
@@ -85,3 +86,12 @@ ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
 
 SELECT * FROM users;
+VALUES ('Charlie', 'charlie7@gmail.com.com', 'Charlie7@2003', 'ceo', NULL); -- CEO has no branch restriction
+
+SHOW DATABASES;
+USE gcdl;
+SHOW TABLES;
+
+ALTER TABLE credit_sales ADD COLUMN sales_agent_id INT,
+ADD FOREIGN KEY (sales_agent_id) REFERENCES users(user_id);
+

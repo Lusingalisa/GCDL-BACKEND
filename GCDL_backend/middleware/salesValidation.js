@@ -91,6 +91,7 @@
 //     return date instanceof Date && !isNaN(date);
 // }
 
+
 // module.exports = { validateSalesData };
 
 const validateSalesData = async (req, res, next) => {

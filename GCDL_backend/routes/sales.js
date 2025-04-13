@@ -1,25 +1,14 @@
-
 const express = require('express');
 const router = express.Router();
+
 const { validateSalesData } = require('../middleware/salesValidation');
 const authenticateToken = require('../middleware/authJWT');
 const db = require('../config/db');
 
 router.post('/sales', authenticateToken, validateSalesData, async (req, res) => {
-    const {
-      produceId,
-      tonnage,
-      amountPaid,
-      buyerName,
-      salesAgentId,
-      date,
-      time,
-      buyerContact,
-      receiptUrl,
-    } = req.body;
 
 
-    try {
+
         // Validate foreign keys (optional, depends on validateSalesData)
         const [produce] = await db.query('SELECT produce_id FROM produce WHERE produce_id = ?', [produceId]);
         if (!produce.length) {
@@ -78,17 +67,36 @@ router.post('/sales', authenticateToken, validateSalesData, async (req, res) => 
           buyerName,
           salesAgentId,
           branch: req.user.branch_id || 'TBD',
+
+        const sale = {
+            id: generateUniqueId(),
+            produceName,
+            tonnage,
+            amountPaid,
+            buyerName,
+            salesAgentName,
+            date,
+            time,
+            buyerContact,
+            createdAt: new Date().toISOString(),
+            receiptNumber: `REC_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+            user_id: req.user.user_id // Link sale to authenticated user
         };
-    
-        res.status(201).json({
-          message: 'Sale recorded successfully',
-          saleId: sale.saleId,
-          receipt,
-          data: sale,
-        });
-      } catch (error) {
-        console.error('Sales error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+
+        sales.push(sale);
+        console.log('Current sales array:', sales);
+
+        const receipt = {
+            receiptNumber: sale.receiptNumber,
+            date: sale.date,
+            time: sale.time,
+            produceName: sale.produceName,
+            tonnage: sale.tonnage,
+            amountPaid: sale.amountPaid,
+            buyerName: sale.buyerName,
+            salesAgentName: sale.salesAgentName,
+            branch: 'TBD'
+
       }
     });
     
@@ -237,3 +245,4 @@ router.post('/sales', authenticateToken, validateSalesData, async (req, res) => 
 //   });
   
 //   module.exports = router;
+
