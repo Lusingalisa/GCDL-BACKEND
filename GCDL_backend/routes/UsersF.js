@@ -6,7 +6,7 @@ const authenticateToken = require('../middleware/authJWT');
 router.get('/agents', authenticateToken, async (req, res) => {
   try {
     const [rows] = await db.query(
-      'SELECT user_id, name FROM users WHERE role = ?',
+      'SELECT user_id, username FROM users WHERE role = ?',
       ['sales_agent']
     );
     res.json({
