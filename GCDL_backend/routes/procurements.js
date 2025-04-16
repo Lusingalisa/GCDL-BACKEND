@@ -3,7 +3,7 @@ const router = express.Router();
 const db = require('../config/db');
 const authenticateToken = require('../middleware/authJWT');
 
-router.post('/procurement', authenticateToken, async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   const {
     produceId,
     type,
@@ -104,7 +104,7 @@ router.post('/procurement', authenticateToken, async (req, res) => {
   }
 });
 
-router.get('/procurement', authenticateToken, async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const [rows] = await db.query(`
       SELECT 
@@ -150,7 +150,7 @@ router.get('/procurement', authenticateToken, async (req, res) => {
   }
 });
 
-router.get('/procurement/:id', authenticateToken, async (req, res) => {
+router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const [rows] = await db.query(
       `SELECT 
