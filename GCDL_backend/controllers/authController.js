@@ -78,4 +78,8 @@ exports.login = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+  // In authController.js
+console.log("Controller received:", req.body);
+console.log("Found user:", user[0]);
+
 };
