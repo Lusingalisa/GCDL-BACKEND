@@ -95,3 +95,10 @@ SHOW TABLES;
 ALTER TABLE credit_sales ADD COLUMN sales_agent_id INT,
 ADD FOREIGN KEY (sales_agent_id) REFERENCES users(user_id);
 
+CREATE INDEX idx_sales_produce_id ON sales(produce_id);
+CREATE INDEX idx_sales_date ON sales(date);
+CREATE INDEX idx_stock_produce_id ON stock(produce_id);
+CREATE INDEX idx_procurement_produce_id ON procurement(produce_id);
+CREATE INDEX idx_procurement_date ON procurement(date);
+CREATE INDEX idx_credit_sales_produce_id ON credit_sales(produce_id);
+CREATE INDEX idx_credit_sales_status ON credit_sales(status);

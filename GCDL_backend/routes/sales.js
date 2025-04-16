@@ -4,7 +4,7 @@ const { validateSalesData } = require('../middleware/salesValidation');
 const db = require('../config/db');
 const authenticateToken = require('../middleware/authJWT');
 
-router.post('/sales', authenticateToken, validateSalesData, async (req, res) => {
+router.post('/', authenticateToken, validateSalesData, async (req, res) => {
   const {
     produceId,
     tonnage,
@@ -18,7 +18,6 @@ router.post('/sales', authenticateToken, validateSalesData, async (req, res) => 
   } = req.body;
 
   try {
-    // Validate foreign keys
     const [produce] = await db.query('SELECT produce_id FROM produce WHERE produce_id = ?', [produceId]);
     if (!produce.length) {
       return res.status(400).json({ error: 'Invalid produce_id: Produce not found' });
@@ -52,6 +51,10 @@ router.post('/sales', authenticateToken, validateSalesData, async (req, res) => 
         receiptUrl || null,
       ]
     );
+
+    // Emit WebSocket event
+    const io = req.app.get('socketio');
+    io.emit('data-updated', { type: 'sales' });
 
     const sale = {
       saleId: result.insertId,
@@ -96,20 +99,39 @@ router.post('/sales', authenticateToken, validateSalesData, async (req, res) => 
   }
 });
 
-router.get('/sales', authenticateToken, async (req, res) => {
+// Existing GET endpoints remain unchanged
+router.get('/', authenticateToken, async (req, res) => {
   try {
-    const [rows] = await db.query('SELECT * FROM sales WHERE sales_agent_id = ?', [
-      req.user.user_id,
-    ]);
+    const [rows] = await db.query(`
+      SELECT 
+        s.sale_id,
+        s.produce_id,
+        p.name AS produceName,
+        s.tonnage,
+        s.amount_paid,
+        s.buyer_name,
+        s.sales_agent_id,
+        u.username AS salesAgentName,
+        s.date,
+        s.time,
+        s.buyer_contact,
+        s.receipt_url
+      FROM sales s
+      JOIN produce p ON s.produce_id = p.produce_id
+      JOIN users u ON s.sales_agent_id = u.user_id
+      WHERE s.sales_agent_id = ?
+    `, [req.user.user_id]);
     res.json({
       total: rows.length,
       data: rows.map(row => ({
         saleId: row.sale_id,
         produceId: row.produce_id,
+        produceName: row.produceName,
         tonnage: row.tonnage,
         amountPaid: row.amount_paid,
         buyerName: row.buyer_name,
         salesAgentId: row.sales_agent_id,
+        salesAgentName: row.salesAgentName,
         date: row.date,
         time: row.time,
         buyerContact: row.buyer_contact,
@@ -125,7 +147,23 @@ router.get('/sales', authenticateToken, async (req, res) => {
 router.get('/sales/:id', authenticateToken, async (req, res) => {
   try {
     const [rows] = await db.query(
-      'SELECT * FROM sales WHERE sale_id = ? AND sales_agent_id = ?',
+      `SELECT 
+        s.sale_id,
+        s.produce_id,
+        p.name AS produceName,
+        s.tonnage,
+        s.amount_paid,
+        s.buyer_name,
+        s.sales_agent_id,
+        u.username AS salesAgentName,
+        s.date,
+        s.time,
+        s.buyer_contact,
+        s.receipt_url
+      FROM sales s
+      JOIN produce p ON s.produce_id = p.produce_id
+      JOIN users u ON s.sales_agent_id = u.user_id
+      WHERE s.sale_id = ? AND s.sales_agent_id = ?`,
       [req.params.id, req.user.user_id]
     );
     if (rows.length === 0) {
@@ -135,10 +173,12 @@ router.get('/sales/:id', authenticateToken, async (req, res) => {
     res.json({
       saleId: row.sale_id,
       produceId: row.produce_id,
+      produceName: row.produceName,
       tonnage: row.tonnage,
       amountPaid: row.amount_paid,
       buyerName: row.buyer_name,
       salesAgentId: row.sales_agent_id,
+      salesAgentName: row.salesAgentName,
       date: row.date,
       time: row.time,
       buyerContact: row.buyer_contact,

@@ -5,7 +5,7 @@ const userController = require('../controllers/userController');
 const {checkRole} = require('../middleware/roleCheck');
 
 // Get all users (accessible by CEO and managers)
-router.get('/users', 
+router.get('/', 
     authenticateToken,
     checkRole(['ceo','manager']), 
     userController.getAllUsers);
