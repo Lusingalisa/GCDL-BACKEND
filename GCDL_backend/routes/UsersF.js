@@ -1,3 +1,5 @@
+// so the manager comes here ans views the sales agents and then has the ability to change them to something else i guess. 
+// have to clarify on that. 
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');

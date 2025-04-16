@@ -1,163 +1,196 @@
 const express = require('express');
 const router = express.Router();
-const jwt = require('jsonwebtoken');
 const db = require('../config/db');
-const { validateCreditSale } = require('../middleware/credit-salesValidation');
+const authenticateToken = require('../middleware/authJWT');
 
-// Authentication middleware
-const authenticate = (req, res, next) => {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-        return res.status(401).json({ error: 'Authentication token required' });
+router.post('/credit_sales', authenticateToken, async (req, res) => {
+  const {
+    buyerName,
+    nationalId,
+    location,
+    amountDue,
+    dueDate,
+    produceId,
+    tonnage,
+    status,
+    salesAgentId,
+  } = req.body;
+
+  try {
+    // Validate foreign keys
+    const [produce] = await db.query('SELECT produce_id FROM produce WHERE produce_id = ?', [produceId]);
+    if (!produce.length) {
+      return res.status(400).json({ error: 'Invalid produce_id: Produce not found' });
     }
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret-key');
-        req.user = decoded;
-        next();
-    } catch (error) {
-        res.status(401).json({ error: 'Invalid or expired token' });
+    const [agent] = await db.query('SELECT user_id FROM users WHERE user_id = ?', [salesAgentId]);
+    if (!agent.length) {
+      return res.status(400).json({ error: 'Invalid sales_agent_id: Agent not found' });
     }
-};
 
-// Role-based authorization middleware
-const restrictTo = (...roles) => {
-    return (req, res, next) => {
-        if (!roles.includes(req.user.role)) {
-            return res.status(403).json({ error: 'Access denied' });
-        }
-        next();
-    };
-};
+    // Basic validation
+    if (!buyerName || !nationalId || !location) {
+      return res.status(400).json({ error: 'Buyer name, national ID, and location are required' });
+    }
+    if (!amountDue || amountDue <= 0) {
+      return res.status(400).json({ error: 'Amount due must be greater than 0' });
+    }
+    if (!dueDate) {
+      return res.status(400).json({ error: 'Due date is required' });
+    }
+    if (!tonnage || tonnage <= 0) {
+      return res.status(400).json({ error: 'Tonnage must be greater than 0' });
+    }
+    if (status && !['pending', 'paid'].includes(status)) {
+      return res.status(400).json({ error: 'Status must be "pending" or "paid"' });
+    }
 
-// POST / - Record a credit sale
-router.post('/', authenticate, restrictTo('sales_agent'), validateCreditSale, async (req, res) => {
-    console.log('POST /credit-sales body:', req.body);
-    const {
-        produceName,
-        tonnage,
-        amountDue,
-        buyerName,
-        nationalId,
+    const [result] = await db.query(
+      `INSERT INTO credit_sales (
+        buyer_name,
+        national_id,
         location,
-        dueDate
-    } = req.body;
+        amount_due,
+        due_date,
+        produce_id,
+        tonnage,
+        status,
+        sales_agent_id
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        buyerName.trim(),
+        nationalId.trim(),
+        location.trim(),
+        parseInt(amountDue),
+        dueDate,
+        parseInt(produceId),
+        parseFloat(tonnage),
+        status || 'pending',
+        parseInt(salesAgentId),
+      ]
+    );
 
-    try {
-        // Find produce_id
-        const [produceRows] = await db.query('SELECT produce_id FROM produce WHERE name = ?', [produceName]);
-        if (produceRows.length === 0) {
-            return res.status(400).json({ error: 'Invalid produce name' });
-        }
-        const produce_id = produceRows[0].produce_id;
+    // Emit WebSocket event
+    const io = req.app.get('socketio');
+    io.emit('data-updated', { type: 'credit_sales' });
 
-        const [result] = await db.query(
-            `INSERT INTO credit_sales (
-                buyer_name, national_id, location, amount_due, due_date,
-                produce_id, tonnage, status
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')`,
-            [
-                buyerName,
-                nationalId,
-                location,
-                amountDue,
-                dueDate,
-                produce_id,
-                tonnage
-            ]
-        );
+    const creditSale = {
+      creditSaleId: result.insertId,
+      buyerName,
+      nationalId,
+      location,
+      amountDue,
+      dueDate,
+      produceId,
+      tonnage,
+      status: status || 'pending',
+      salesAgentId,
+    };
 
-        const creditSale = {
-            credit_sale_id: result.insertId,
-            buyer_name: buyerName,
-            national_id: nationalId,
-            location,
-            amount_due: amountDue,
-            due_date: dueDate,
-            produce_id,
-            produce_name: produceName,
-            tonnage,
-            status: 'pending',
-            sales_agent_id: req.user.user_id
-        };
-
-        res.status(201).json({
-            message: 'Credit sale recorded successfully',
-            creditSaleId: creditSale.credit_sale_id,
-            data: creditSale
-        });
-    } catch (error) {
-        console.error('Credit sale error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+    res.status(201).json({
+      message: 'Credit sale recorded successfully',
+      creditSaleId: creditSale.creditSaleId,
+      data: creditSale,
+    });
+  } catch (error) {
+    console.error('Credit sales error:', error.message, error.stack);
+    if (error.code === 'ER_NO_REFERENCED_ROW_2') {
+      return res.status(400).json({ error: 'Foreign key violation: Invalid produce_id or sales_agent_id' });
     }
+    if (error.code === 'ER_DUP_ENTRY') {
+      return res.status(400).json({ error: 'Duplicate entry detected' });
+    }
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
-// GET / - Retrieve all credit sales
-router.get('/', authenticate, async (req, res) => {
-    try {
-        let query = `
-            SELECT cs.credit_sale_id, cs.buyer_name, cs.national_id, cs.location,
-                   cs.amount_due, cs.due_date, cs.produce_id, p.name AS produce_name,
-                   cs.tonnage, cs.status
-            FROM credit_sales cs
-            JOIN produce p ON cs.produce_id = p.produce_id
-        `;
-        let params = [];
-
-        if (req.user.role === 'sales_agent') {
-            query += `
-                JOIN sales s ON cs.produce_id = s.produce_id
-                WHERE s.sales_agent_id = ?
-            `;
-            params.push(req.user.user_id);
-        }
-
-        const [rows] = await db.query(query, params);
-        res.json({
-            total: rows.length,
-            data: rows
-        });
-    } catch (error) {
-        console.error('Get credit sales error:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
+router.get('/credit_sales', authenticateToken, async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT 
+        cs.credit_sale_id,
+        cs.buyer_name,
+        cs.national_id,
+        cs.location,
+        cs.amount_due,
+        cs.due_date,
+        cs.produce_id,
+        p.name AS produceName,
+        cs.tonnage,
+        cs.status,
+        cs.sales_agent_id,
+        u.username AS salesAgentName
+      FROM credit_sales cs
+      JOIN produce p ON cs.produce_id = p.produce_id
+      JOIN users u ON cs.sales_agent_id = u.user_id
+      WHERE cs.sales_agent_id = ?
+    `, [req.user.user_id]);
+    res.json({
+      total: rows.length,
+      data: rows.map(row => ({
+        creditSaleId: row.credit_sale_id,
+        buyerName: row.buyer_name,
+        nationalId: row.national_id,
+        location: row.location,
+        amountDue: row.amount_due,
+        dueDate: row.due_date,
+        produceId: row.produce_id,
+        produceName: row.produceName,
+        tonnage: row.tonnage,
+        status: row.status,
+        salesAgentId: row.sales_agent_id,
+        salesAgentName: row.salesAgentName,
+      })),
+    });
+  } catch (error) {
+    console.error('Fetch credit sales error:', error.message, error.stack);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
-// GET /:id - Retrieve a specific credit sale
-router.get('/:id', authenticate, async (req, res) => {
-    try {
-        const [rows] = await db.query(
-            `
-            SELECT cs.credit_sale_id, cs.buyer_name, cs.national_id, cs.location,
-                   cs.amount_due, cs.due_date, cs.produce_id, p.name AS produce_name,
-                   cs.tonnage, cs.status
-            FROM credit_sales cs
-            JOIN produce p ON cs.produce_id = p.produce_id
-            WHERE cs.credit_sale_id = ?
-            `,
-            [req.params.id]
-        );
-
-        const creditSale = rows[0];
-        if (!creditSale) {
-            return res.status(404).json({ error: 'Credit sale not found' });
-        }
-
-        // Restrict sales agents to their own sales (approximate via produce_id)
-        if (req.user.role === 'sales_agent') {
-            const [saleRows] = await db.query(
-                'SELECT sale_id FROM sales WHERE produce_id = ? AND sales_agent_id = ?',
-                [creditSale.produce_id, req.user.user_id]
-            );
-            if (saleRows.length === 0) {
-                return res.status(403).json({ error: 'Access denied' });
-            }
-        }
-
-        res.json(creditSale);
-    } catch (error) {
-        console.error('Get credit sale error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+router.get('/credit_sales/:id', authenticateToken, async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT 
+        cs.credit_sale_id,
+        cs.buyer_name,
+        cs.national_id,
+        cs.location,
+        cs.amount_due,
+        cs.due_date,
+        cs.produce_id,
+        p.name AS produceName,
+        cs.tonnage,
+        cs.status,
+        cs.sales_agent_id,
+        u.username AS salesAgentName
+      FROM credit_sales cs
+      JOIN produce p ON cs.produce_id = p.produce_id
+      JOIN users u ON cs.sales_agent_id = u.user_id
+      WHERE cs.credit_sale_id = ? AND cs.sales_agent_id = ?`,
+      [req.params.id, req.user.user_id]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Credit sale not found' });
     }
+    const row = rows[0];
+    res.json({
+      creditSaleId: row.credit_sale_id,
+      buyerName: row.buyer_name,
+      nationalId: row.national_id,
+      location: row.location,
+      amountDue: row.amount_due,
+      dueDate: row.due_date,
+      produceId: row.produce_id,
+      produceName: row.produceName,
+      tonnage: row.tonnage,
+      status: row.status,
+      salesAgentId: row.sales_agent_id,
+      salesAgentName: row.salesAgentName,
+    });
+  } catch (error) {
+    console.error('Fetch credit sale error:', error.message, error.stack);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 module.exports = router;
