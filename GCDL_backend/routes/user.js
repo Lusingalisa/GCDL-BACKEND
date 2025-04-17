@@ -25,4 +25,19 @@ router.delete(
   checkRole(['ceo']),
   userController.deleteUser
 );
+
+// Add this to your users router
+router.get('/sales-agents', authenticateToken, async (req, res) => {
+    try {
+      // Query to get all users with sales agent role
+      const [agents] = await db.query(
+        `SELECT user_id, username, role FROM users WHERE role = 'sales_agent'`
+      );
+      res.json(agents);
+    } catch (error) {
+      console.error('Error fetching sales agents:', error);
+      res.status(500).json({ error: 'Failed to fetch sales agents' });
+    }
+  });
+
 module.exports = router;
