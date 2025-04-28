@@ -104,51 +104,84 @@ router.post('/', authenticateToken, async (req, res) => {
   }
 });
 
+// router.get('/', authenticateToken, async (req, res) => {
+//   try {
+//     const [rows] = await db.query(`
+//       SELECT 
+//         pr.procurement_id,
+//         pr.produce_id,
+//         p.name AS produceName,
+//         pr.type,
+//         pr.date,
+//         pr.time,
+//         pr.tonnage,
+//         pr.cost,
+//         pr.dealer_name,
+//         pr.branch_id,
+//         b.branch_name,
+//         pr.contact,
+//         pr.selling_price
+//       FROM procurement pr
+//       JOIN produce p ON pr.produce_id = p.produce_id
+//       JOIN branches b ON pr.branch_id = b.branch_id
+//       WHERE pr.branch_id = ? OR ? IS NULL
+//     `, [req.user.branch_id, req.user.branch_id]);
+//     res.json({
+//       total: rows.length,
+//       data: rows.map(row => ({
+//         procurementId: row.procurement_id,
+//         produceId: row.produce_id,
+//         produceName: row.produceName,
+//         type: row.type,
+//         date: row.date,
+//         time: row.time,
+//         tonnage: row.tonnage,
+//         cost: row.cost,
+//         dealerName: row.dealer_name,
+//         branchId: row.branch_id,
+//         branchName: row.branch_name,
+//         contact: row.contact,
+//         sellingPrice: row.selling_price,
+//       })),
+//     });
+//   } catch (error) {
+//     console.error('Fetch procurement error:', error.message, error.stack);
+//     res.status(500).json({ error: 'Internal server error' });
+//   }
+// });  
+
+// In your GET /procurements endpoint
 router.get('/', authenticateToken, async (req, res) => {
-  try {
-    const [rows] = await db.query(`
-      SELECT 
-        pr.procurement_id,
-        pr.produce_id,
-        p.name AS produceName,
-        pr.type,
-        pr.date,
-        pr.time,
-        pr.tonnage,
-        pr.cost,
-        pr.dealer_name,
-        pr.branch_id,
-        b.branch_name,
-        pr.contact,
-        pr.selling_price
-      FROM procurement pr
-      JOIN produce p ON pr.produce_id = p.produce_id
-      JOIN branches b ON pr.branch_id = b.branch_id
-      WHERE pr.branch_id = ? OR ? IS NULL
-    `, [req.user.branch_id, req.user.branch_id]);
-    res.json({
-      total: rows.length,
-      data: rows.map(row => ({
-        procurementId: row.procurement_id,
-        produceId: row.produce_id,
-        produceName: row.produceName,
-        type: row.type,
-        date: row.date,
-        time: row.time,
-        tonnage: row.tonnage,
-        cost: row.cost,
-        dealerName: row.dealer_name,
-        branchId: row.branch_id,
-        branchName: row.branch_name,
-        contact: row.contact,
-        sellingPrice: row.selling_price,
-      })),
-    });
-  } catch (error) {
-    console.error('Fetch procurement error:', error.message, error.stack);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
+    try {
+      const [rows] = await db.query(`
+        SELECT 
+          pr.procurement_id as procurementId,
+          pr.produce_id as produceId,
+          p.name as produceName,
+          pr.type,
+          pr.date,
+          pr.time,
+          pr.tonnage,
+          pr.cost,
+          pr.dealer_name as dealerName,
+          pr.branch_id as branchId,
+          b.branch_name as branchName,
+          pr.contact,
+          pr.selling_price as sellingPrice
+        FROM procurement pr
+        JOIN produce p ON pr.produce_id = p.produce_id
+        JOIN branches b ON pr.branch_id = b.branch_id
+        WHERE pr.branch_id = ? OR ? IS NULL
+      `, [req.user.branch_id, req.user.branch_id]);
+      
+      res.json({
+        data: rows // Wrap in data object to match useApi expectation
+      });
+    } catch (error) {
+      console.error('Error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
 
 router.get('/:id', authenticateToken, async (req, res) => {
   try {

@@ -1,4 +1,4 @@
-        const express = require('express');
+const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -160,6 +160,24 @@ router.get('/users', authenticate, restrictTo('manager', 'ceo'), async (req, res
         res.status(500).json({ error: 'Failed to retrieve users' });
     }
 });
+
+// backend/routes/auth.js
+router.get('/me', authenticate, async (req, res) => {
+    try {
+      const [rows] = await db.query(
+        'SELECT user_id, username, role, branch_id FROM users WHERE user_id = ?',
+        [req.user.user_id]
+      );
+      const user = rows[0];
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      res.json({ user });
+    } catch (error) {
+      console.error('Get user error:', error);
+      res.status(500).json({ error: 'Failed to retrieve user' });
+    }
+  });
 
 
 module.exports = router;
